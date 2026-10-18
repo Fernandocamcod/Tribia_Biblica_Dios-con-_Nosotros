@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Bíblica Grupo Dios Con Nosotros</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            navy: '#0A2540',
+                            blue: '#1E3A8A',
+                            turquoise: '#06B6D4',
+                            cyan: '#22D3EE',
+                            softBlue: '#F0F9FF',
+                            lightTurquoise: '#E0F2FE'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(10, 37, 64, 0.3);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F0F9FF;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #06B6D4;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse-pointer {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.1) translateY(-4px); }
+        }
+        .pointer-anim {
+            animation: pulse-pointer 1.5s infinite;
+        }
+
+        .btn-turquoise {
+            background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-turquoise:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.6);
+        }
+        .btn-turquoise:active {
+            transform: translateY(0);
+        }
+
+        .btn-navy {
+            background: linear-gradient(135deg, #1E3A8A 0%, #0A2540 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(10, 37, 64, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-navy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(10, 37, 64, 0.6);
+        }
+
+        .option-card {
+            transition: all 0.2s ease;
+            border: 2px solid #E0F2FE;
+        }
+        .option-card:hover:not(.disabled) {
+            border-color: #06B6D4;
+            background-color: #E0F2FE;
+            transform: translateX(4px);
+        }
+        .option-card.selected-correct {
+            background-color: #DCFCE7 !important;
+            border-color: #16A34A !important;
+            color: #15803D !important;
+        }
+        .option-card.selected-wrong {
+            background-color: #FEE2E2 !important;
+            border-color: #DC2626 !important;
+            color: #B91C1C !important;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .level-radio:checked + label {
+            border-color: #06B6D4;
+            background-color: #E0F2FE;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-3 sm:p-6 min-h-screen font-sans">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="w-full max-w-4xl glass-card rounded-3xl overflow-hidden shadow-2xl my-auto relative">
+        
+        <!-- HEADER / NAVIGATION BAR -->
+        <header class="bg-brand-navy text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 border-b-4 border-brand-turquoise">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-brand-turquoise flex items-center justify-center text-brand-navy text-xl font-bold">
+                    <i class="fas fa-cross"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold tracking-wide text-white leading-tight">TRIVIA BÍBLICA GRUPO DIOS CON NOSOTROS</h1>
+                    <p class="text-xs text-brand-cyan uppercase tracking-wider">Edición Católica</p>
+                </div>
+            </div>
+
+            <div id="header-stats" class="hidden flex flex-wrap items-center justify-center gap-3 bg-brand-blue/50 px-4 py-2 rounded-xl text-sm border border-brand-turquoise/30">
+                <div class="text-center">
+                    <span class="block text-xs text-brand-cyan">Jugador</span>
+                    <span id="stat-player" class="font-bold text-white truncate max-w-[90px] block">Invitado</span>
+                </div>
+                <div class="h-6 w-px bg-brand-turquoise/40"></div>
+                <div class="text-center">
+                    <span class="block text-xs text-brand-cyan">Nivel</span>
+                    <span id="stat-level" class="font-bold text-brand-cyan uppercase text-xs">Básico</span>
+                </div>
+                <div class="h-6 w-px bg-brand-turquoise/40"></div>
+                <div class="text-center">
+                    <span class="block text-xs text-brand-cyan">Puntos</span>
+                    <span id="stat-score" class="font-bold text-yellow-300">0</span>
+                </div>
+                <div class="h-6 w-px bg-brand-turquoise/40"></div>
+                <div class="text-center">
+                    <span class="block text-xs text-brand-cyan">Pregunta</span>
+                    <span id="stat-progress" class="font-bold text-white">0/10</span>
+                </div>
+                <div class="h-6 w-px bg-brand-turquoise/40"></div>
+                <button onclick="confirmExitGame()" class="bg-rose-600/80 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm">
+                    <i class="fas fa-door-open"></i>
+                    <span>Salir</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="p-4 sm:p-8">
+
+            <!-- 1. SCREEN: START GAME & LEVEL SELECTION & RANKINGS -->
+            <section id="screen-start" class="text-center py-4 space-y-6">
+                <div class="max-w-md mx-auto space-y-2">
+                    <div class="inline-block p-4 rounded-full bg-brand-lightTurquoise text-brand-turquoise mb-1">
+                        <i class="fas fa-bible text-5xl"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy">¡Pone a prueba tu Fe y Conocimiento!</h2>
+                    <p class="text-gray-600 text-xs sm:text-sm">Selecciona tu nivel de dificultad, gira la ruleta y demuestra cuánto conoces la Palabra de Dios.</p>
+                </div>
+
+                <form id="form-start" class="max-w-md mx-auto space-y-4 text-left" onsubmit="startGame(event)">
+                    <div>
+                        <label for="player-name" class="block text-xs font-semibold text-brand-navy uppercase mb-1">Nombre del Jugador:</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-brand-turquoise">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" id="player-name" required placeholder="Ingresa tu nombre o apodo" class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-brand-turquoise/30 focus:border-brand-turquoise focus:outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Difficulty Level Picker -->
+                    <div>
+                        <label class="block text-xs font-semibold text-brand-navy uppercase mb-2">Selecciona Nivel de Dificultad:</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <input type="radio" id="level-basico" name="difficulty" value="basico" class="level-radio hidden" checked>
+                                <label for="level-basico" class="block p-3 text-center rounded-xl border-2 border-gray-200 cursor-pointer transition-all hover:border-brand-turquoise">
+                                    <i class="fas fa-seedling text-green-500 block text-lg mb-1"></i>
+                                    <span class="block font-bold text-xs text-brand-navy">Básico</span>
+                                    <span class="text-[10px] text-gray-500 block">x1 Puntos</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="radio" id="level-medio" name="difficulty" value="medio" class="level-radio hidden">
+                                <label for="level-medio" class="block p-3 text-center rounded-xl border-2 border-gray-200 cursor-pointer transition-all hover:border-brand-turquoise">
+                                    <i class="fas fa-book-open text-brand-turquoise block text-lg mb-1"></i>
+                                    <span class="block font-bold text-xs text-brand-navy">Medio</span>
+                                    <span class="text-[10px] text-gray-500 block">x1.5 Puntos</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="radio" id="level-experto" name="difficulty" value="experto" class="level-radio hidden">
+                                <label for="level-experto" class="block p-3 text-center rounded-xl border-2 border-gray-200 cursor-pointer transition-all hover:border-brand-turquoise">
+                                    <i class="fas fa-crown text-amber-500 block text-lg mb-1"></i>
+                                    <span class="block font-bold text-xs text-brand-navy">Experto</span>
+                                    <span class="text-[10px] text-gray-500 block">x2 Puntos</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 rounded-xl btn-turquoise font-bold text-lg tracking-wide flex items-center justify-center gap-2">
+                        <span>COMENZAR DESAFÍO</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <!-- LEADERBOARD / RANKINGS BOARD -->
+                <div class="max-w-xl mx-auto mt-6 bg-white rounded-2xl border-2 border-brand-turquoise/30 p-4 shadow-sm text-left space-y-3">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                        <h3 class="font-extrabold text-brand-navy text-sm flex items-center gap-2">
+                            <i class="fas fa-trophy text-amber-500 text-base"></i>
+                            <span>Tabla de Mejores Puntuaciones</span>
+                        </h3>
+                        <div class="flex gap-1 text-xs">
+                            <button onclick="renderLeaderboard('basico')" id="tab-rank-basico" class="px-2.5 py-1 rounded-lg font-bold bg-brand-turquoise text-white">Básico</button>
+                            <button onclick="renderLeaderboard('medio')" id="tab-rank-medio" class="px-2.5 py-1 rounded-lg font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Medio</button>
+                            <button onclick="renderLeaderboard('experto')" id="tab-rank-experto" class="px-2.5 py-1 rounded-lg font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Experto</button>
+                        </div>
+                    </div>
+
+                    <div id="leaderboard-container" class="space-y-1.5 min-h-[140px] text-xs">
+                        <!-- Ranking items populated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. SCREEN: ROULETTE WHEEL -->
+            <section id="screen-roulette" class="hidden flex flex-col items-center justify-center py-4 space-y-6">
+                <div class="text-center space-y-1">
+                    <h2 class="text-2xl font-bold text-brand-navy">Gira la Ruleta</h2>
+                    <p class="text-sm text-gray-600">Descubre la categoría de tu siguiente pregunta</p>
+                </div>
+
+                <div class="relative flex items-center justify-center my-2">
+                    <div class="absolute -top-4 z-20 pointer-anim text-brand-navy text-3xl sm:text-4xl filter drop-shadow-md">
+                        <i class="fas fa-caret-down text-brand-navy"></i>
+                    </div>
+
+                    <canvas id="roulette-canvas" width="360" height="360" class="max-w-full h-auto drop-shadow-xl rounded-full border-4 border-white"></canvas>
+
+                    <div class="absolute w-14 h-14 bg-brand-navy border-4 border-white rounded-full flex items-center justify-center text-white shadow-inner pointer-events-none z-10">
+                        <i class="fas fa-cross text-brand-cyan text-lg"></i>
+                    </div>
+                </div>
+
+                <button id="btn-spin" onclick="spinWheel()" class="btn-turquoise px-10 py-4 rounded-full font-bold text-lg tracking-wider flex items-center gap-3">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>GIRAR RULETA</span>
+                </button>
+
+                <div id="category-result" class="hidden text-center py-3 px-6 rounded-2xl bg-brand-lightTurquoise border-2 border-brand-turquoise text-brand-navy font-bold text-lg animate-bounce">
+                    ¡Categoría seleccionada!
+                </div>
+            </section>
+
+            <!-- 3. SCREEN: QUESTION & OPTIONS -->
+            <section id="screen-question" class="hidden space-y-6 py-2">
+                <div class="flex flex-wrap justify-between items-center gap-2 border-b border-gray-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span id="question-category-badge" class="px-4 py-1.5 rounded-full bg-brand-turquoise text-white font-semibold text-xs tracking-wider uppercase shadow-sm">
+                            Categoría
+                        </span>
+                        <span id="question-level-badge" class="px-3 py-1.5 rounded-full bg-brand-navy text-brand-cyan font-bold text-xs uppercase shadow-sm">
+                            Básico
+                        </span>
+                    </div>
+                    <span id="streak-badge" class="hidden px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold items-center gap-1">
+                        <i class="fas fa-fire text-amber-500"></i> Racha x<span id="streak-count">0</span>
+                    </span>
+                </div>
+
+                <div class="bg-brand-softBlue p-5 sm:p-6 rounded-2xl border border-brand-turquoise/30 shadow-inner">
+                    <h3 id="question-text" class="text-lg sm:text-xl font-bold text-brand-navy leading-relaxed">
+                        Cargando pregunta...
+                    </h3>
+                </div>
+
+                <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <!-- Options generated dynamically -->
+                </div>
+
+                <div id="feedback-box" class="hidden rounded-2xl p-4 sm:p-5 text-sm space-y-2 transition-all">
+                    <div class="font-bold flex items-center gap-2 text-base" id="feedback-title"></div>
+                    <p id="feedback-quote" class="italic text-xs font-semibold text-gray-700 border-l-2 border-brand-turquoise pl-3 py-1"></p>
+                    <p id="feedback-explanation" class="text-gray-700 leading-relaxed"></p>
+                    <div class="pt-2 flex justify-end">
+                        <button id="btn-next-question" onclick="nextStepAfterQuestion()" class="btn-navy px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
+                            <span>Siguiente Pregunta</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. SCREEN: FINAL RESULTS -->
+            <section id="screen-results" class="hidden text-center py-6 space-y-6">
+                <div class="space-y-2">
+                    <div class="inline-block p-4 rounded-full bg-brand-lightTurquoise text-brand-turquoise mb-2">
+                        <i id="rank-icon" class="fas fa-award text-5xl"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy">¡Desafío Finalizado!</h2>
+                    <p class="text-gray-600 text-sm">Resumen de tu desempeño en nivel <span id="final-level-text" class="font-bold text-brand-navy uppercase">Básico</span>:</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div class="bg-brand-softBlue p-4 rounded-2xl border border-brand-turquoise/20 text-center">
+                        <span class="text-xs text-gray-500 uppercase font-semibold block">Puntaje Total</span>
+                        <span id="final-score" class="text-3xl font-extrabold text-brand-navy">0</span>
+                        <span class="text-xs text-brand-turquoise font-medium block">puntos</span>
+                    </div>
+                    <div class="bg-brand-softBlue p-4 rounded-2xl border border-brand-turquoise/20 text-center">
+                        <span class="text-xs text-gray-500 uppercase font-semibold block">Aciertos</span>
+                        <span id="final-hits" class="text-3xl font-extrabold text-brand-blue">0 / 10</span>
+                        <span id="final-percentage" class="text-xs text-gray-500 font-medium block">(0%)</span>
+                    </div>
+                    <div class="bg-brand-softBlue p-4 rounded-2xl border border-brand-turquoise/20 text-center">
+                        <span class="text-xs text-gray-500 uppercase font-semibold block">Mejor Racha</span>
+                        <span id="final-streak" class="text-3xl font-extrabold text-amber-500">0</span>
+                        <span class="text-xs text-amber-600 font-medium block">seguidas</span>
+                    </div>
+                </div>
+
+                <div class="max-w-xl mx-auto bg-gradient-to-r from-brand-navy to-brand-blue text-white p-6 rounded-2xl shadow-lg space-y-2">
+                    <span class="text-xs text-brand-cyan font-bold tracking-widest uppercase">Tu Rango Bíblico</span>
+                    <h3 id="final-rank-title" class="text-2xl font-black text-yellow-300">Aprendiz del Evangelio</h3>
+                    <p id="final-rank-desc" class="text-xs text-gray-200 leading-relaxed">
+                        Sigue cultivando tu fe y estudiando la Palabra de Dios diariamente para seguir creciendo.
+                    </p>
+                </div>
+
+                <div class="pt-2 flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
+                    <button onclick="resetGame()" class="w-full py-3.5 rounded-xl btn-turquoise font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-redo"></i>
+                        <span>JUGAR DE NUEVO</span>
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="bg-gray-50 px-6 py-3 border-t border-gray-100 text-center text-xs text-gray-500">
+            TRIVIA BÍBLICA GRUPO DIOS CON NOSOTROS &copy; 2026 • Creado para la formación y edificación en la Fe
+        </footer>
+    </div>
+
+    <!-- MODAL CONFIRM EXIT -->
+    <div id="modal-exit" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl border-2 border-brand-turquoise">
+            <div class="w-16 h-16 rounded-full bg-brand-softBlue text-brand-turquoise flex items-center justify-center text-3xl mx-auto">
+                <i class="fas fa-heart"></i>
+            </div>
+            <h3 class="text-xl font-bold text-brand-navy">¡Gracias por participar!</h3>
+            <p id="exit-message" class="text-sm text-gray-600 leading-relaxed italic">
+                "La Palabra del Señor permanece para siempre." — Sigue alimentando tu fe y regresa cuando desees probar otro nivel.
+            </p>
+            <div class="p-3 bg-brand-softBlue rounded-xl border border-brand-turquoise/20 text-xs text-brand-navy font-semibold">
+                ¿Deseas cambiar de nivel o reiniciar tu partida?
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeExitModal()" class="w-1/2 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-all text-xs">
+                    Continuar Jugando
+                </button>
+                <button onclick="executeExit()" class="w-1/2 py-3 rounded-xl btn-turquoise font-bold text-xs">
+                    Salir al Menú
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionDatabase = {
+            basico: {
+                "Antiguo Testamento": [
+                    {
+                        question: "¿Cuál es el primer libro de la Biblia?",
+                        options: ["Éxodo", "Salmos", "Génesis", "Levítico"],
+                        correct: 2,
+                        citation: "Génesis 1, 1",
+                        explanation: "Génesis es el primer libro del Antiguo Testamento y narra la creación del mundo y los orígenes de la fe."
+                    },
+                    {
+                        question: "¿A quién le entregó Dios los Diez Mandamientos en el Monte Sinaí?",
+                        options: ["Abraham", "Moisés", "David", "Aarón"],
+                        correct: 1,
+                        citation: "Éxodo 20, 1-17",
+                        explanation: "Moisés subió al Monte Sinaí donde Dios le entregó las tablas de la Ley para el pueblo de Israel."
+                    },
+                    {
+                        question: "¿Cuántos días y noches llovió durante el Gran Diluvio en tiempos de Noé?",
+                        options: ["40 días y 40 noches", "7 días y 7 noches", "100 días", "12 días"],
+                        correct: 0,
+                        citation: "Génesis 7, 12",
+                        explanation: "La Biblia especifica que la lluvia cayó sobre la tierra durante cuarenta días y cuarenta noches."
+                    },
+                    {
+                        question: "¿Quién derrotó al gigante filisteo Goliat con solo una honda y una piedra?",
+                        options: ["Sansón", "Gedeón", "David", "Josué"],
+                        correct: 2,
+                        citation: "1 Samuel 17, 49-50",
+                        explanation: "El joven pastor David confió en el nombre del Señor para vencer al gigante Goliat."
+                    }
+                ],
+                "Nuevo Testamento": [
+                    {
+                        question: "¿En qué ciudad nació Jesús según las Sagradas Escrituras?",
+                        options: ["Nazaret", "Jerusalén", "Belén", "Cafarnaún"],
+                        correct: 2,
+                        citation: "Lucas 2, 4-7",
+                        explanation: "Jesús nació en Belén de Judá, cumpliendo las profecías del Antiguo Testamento."
+                    },
+                    {
+                        question: "¿Quién negó a Jesús tres veces antes de que cantara el gallo?",
+                        options: ["Juan", "Santiago", "Pedro", "Tomás"],
+                        correct: 2,
+                        citation: "Mateo 26, 75",
+                        explanation: "San Pedro negó conocer a Jesús tres veces por temor, pero luego lloró amargamente y fue arrepentido."
+                    },
+                    {
+                        question: "¿Cuál fue el primer milagro público de Jesús en el Evangelio de San Juan?",
+                        options: ["Multiplicar panes", "Caminar sobre el agua", "Las bodas de Caná", "Curar a un ciego"],
+                        correct: 2,
+                        citation: "Juan 2, 1-11",
+                        explanation: "En las bodas de Caná, por intercesión de María, Jesús convirtió el agua en vino."
+                    },
+                    {
+                        question: "¿En qué monte fue crucificado Jesucristo?",
+                        options: ["Monte de los Olivos", "Monte Calvario (Gólgota)", "Monte Tabor", "Monte Sinaí"],
+                        correct: 1,
+                        citation: "Lucas 23, 33",
+                        explanation: "Jesús entregó su vida en el monte Calvario o Gólgota por la salvación de la humanidad."
+                    }
+                ],
+                "Personajes Bíblicos": [
+                    {
+                        question: "¿Quién fue el fiel esposo de la Santísima Virgen María y custodio de Jesús?",
+                        options: ["San José", "San Joaquín", "San Juan", "San Zacarías"],
+                        correct: 0,
+                        citation: "Mateo 1, 18-24",
+                        explanation: "San José, varón justo, asumió la paternidad adoptiva de Jesús e hizo la voluntad de Dios."
+                    },
+                    {
+                        question: "¿Quién fue la madre de San Juan Bautista y prima de la Virgen María?",
+                        options: ["Ana", "Isabel", "Marta", "Sara"],
+                        correct: 1,
+                        citation: "Lucas 1, 36",
+                        explanation: "Santa Isabel concibió a San Juan Bautista en su vejez e inspirada por el Espíritu reconoció a María."
+                    },
+                    {
+                        question: "¿Quién fue vendido por sus hermanos como esclavo pero llegó a ser gobernador de Egipto?",
+                        options: ["José", "Benjamín", "Judá", "Samuel"],
+                        correct: 0,
+                        citation: "Génesis 37 y 41",
+                        explanation: "José fue vendido por envidia, pero Dios usó su historia para salvar a su familia del hambre."
+                    },
+                    {
+                        question: "¿Cuál de estos personajes bíblicos es reconocido como el 'Padre de la Fe'?",
+                        options: ["Jacob", "Abraham", "Noé", "Isaac"],
+                        correct: 1,
+                        citation: "Génesis 15, 5-6",
+                        explanation: "Abraham creyó en las promesas de Dios contra toda esperanza y es el Padre de los creyentes."
+                    }
+                ],
+                "Sacramentos y Doctrina": [
+                    {
+                        question: "¿Cuántos Sacramentos tiene la Iglesia Católica instituidos por Jesucristo?",
+                        options: ["5 Sacramentos", "7 Sacramentos", "10 Sacramentos", "12 Sacramentos"],
+                        correct: 1,
+                        citation: "Catecismo de la Iglesia Católica (CIC 1210)",
+                        explanation: "Los 7 sacramentos son: Bautismo, Confirmación, Eucaristía, Penitencia, Unción de los enfermos, Orden y Matrimonio."
+                    },
+                    {
+                        question: "¿Qué oración enseñó Jesús directamente a sus discípulos para orar?",
+                        options: ["El Ave María", "El Padre Nuestro", "El Gloria", "El Credo"],
+                        correct: 1,
+                        citation: "Mateo 6, 9-13",
+                        explanation: "El Padre Nuestro es la oración modelo enseñada directamente por Jesucristo."
+                    },
+                    {
+                        question: "¿Quién es la cabeza visible de la Iglesia Católica en la Tierra y sucesor de San Pedro?",
+                        options: ["El Obispo diocesano", "El Papa", "El Cardenal", "Un Sacerdote"],
+                        correct: 1,
+                        citation: "CIC 882",
+                        explanation: "El Papa, Obispo de Roma y sucesor de San Pedro, es el principio visible de unidad de la Iglesia."
+                    },
+                    {
+                        question: "¿Qué período litúrgico de 40 días nos prepara para la Pascua de Resurrección?",
+                        options: ["Adviento", "Cuaresma", "Tiempo Ordinario", "Pentecostés"],
+                        correct: 1,
+                        citation: "Normas del Año Litúrgico",
+                        explanation: "La Cuaresma es el tiempo de preparación, oración, ayuno y conversión previo a la Semana Santa."
+                    }
+                ]
+            },
+            medio: {
+                "Antiguo Testamento": [
+                    {
+                        question: "¿Qué profeta fue arrojado al foso de los leones y protegido milagrosamente por Dios?",
+                        options: ["Isaías", "Jeremías", "Daniel", "Ezequiel"],
+                        correct: 2,
+                        citation: "Daniel 6, 17-23",
+                        explanation: "Daniel permaneció ileso en el foso porque confió en Dios, quien envió a su ángel a cerrar la boca de los leones."
+                    },
+                    {
+                        question: "¿Qué ciudad vio caer sus gigantescas murallas tras marchar el ejército 7 días tocando trompetas?",
+                        options: ["Jericó", "Nínive", "Babilonia", "Sodoma"],
+                        correct: 0,
+                        citation: "Josué 6, 20",
+                        explanation: "Al séptimo día, al sonar de los cuernos y el clamor del pueblo, las murallas de Jericó cayeron."
+                    },
+                    {
+                        question: "¿Qué rey de Israel pidió a Dios un corazón sabio y construyó el Primer Templo de Jerusalén?",
+                        options: ["Saúl", "David", "Salomón", "Ezequías"],
+                        correct: 2,
+                        citation: "1 Reyes 5-6",
+                        explanation: "El rey Salomón destacó por su sabiduría concedida por Dios y por erigir el Santo Templo."
+                    },
+                    {
+                        question: "¿Qué mar se abrió para que el pueblo de Israel saliera libre de la persecución del Faraón?",
+                        options: ["Mar Muerto", "Mar Rojo", "Mar de Galilea", "Mar Mediterráneo"],
+                        correct: 1,
+                        citation: "Éxodo 14, 21-22",
+                        explanation: "Moisés extendió su vara y Dios dividió las aguas del Mar Rojo abriendo un camino en seco."
+                    }
+                ],
+                "Nuevo Testamento": [
+                    {
+                        question: "¿Qué acontecimiento celebramos 50 días después de la Resurrección con la venida del Espíritu Santo?",
+                        options: ["La Ascensión", "Pentecostés", "La Epifanía", "La Transfiguración"],
+                        correct: 1,
+                        citation: "Hechos 2, 1-4",
+                        explanation: "En Pentecostés el Espíritu Santo descendió en forma de lenguas de fuego sobre María y los Apóstoles."
+                    },
+                    {
+                        question: "¿Quién escribió la mayor cantidad de epístolas o cartas del Nuevo Testamento?",
+                        options: ["San Pedro", "San Juan", "San Pablo", "San Santiago"],
+                        correct: 2,
+                        citation: "Epístolas Paulinas",
+                        explanation: "San Pablo de Tarso escribió 13 o 14 cartas fundamentales para las primeras comunidades cristianas."
+                    },
+                    {
+                        question: "¿Quién fue la primera persona en presenciar a Jesús Resucitado junto al sepulcro?",
+                        options: ["María la madre de Jesús", "María Magdalena", "Salomé", "Marta"],
+                        correct: 1,
+                        citation: "Juan 20, 11-18",
+                        explanation: "Santa María Magdalena fue la primera testigo del Resucitado y anunció la Gran Noticia a los Apóstoles."
+                    },
+                    {
+                        question: "¿Qué apóstol no creía en la Resurrección de Jesús hasta tocar personalmente sus llagas?",
+                        options: ["Felipe", "Tomás", "Bartolomé", "Tadeo"],
+                        correct: 1,
+                        citation: "Juan 20, 24-29",
+                        explanation: "Santo Tomás creyó al tocar las llagas del Señor. Jesús dijo: 'Bienaventurados los que crean sin haber visto'."
+                    }
+                ],
+                "Personajes Bíblicos": [
+                    {
+                        question: "¿Qué reina arriesgó su vida intercediendo ante el rey Asuero para salvar al pueblo judío?",
+                        options: ["Rut", "Ester", "Judith", "Débora"],
+                        correct: 1,
+                        citation: "Libro de Ester",
+                        explanation: "La reina Ester intercedió con ayuno y oración, evitando la masacre de su pueblo."
+                    },
+                    {
+                        question: "¿Cómo se llamaba el cobrador de impuestos de baja estatura que subió a un árbol para ver a Jesús?",
+                        options: ["Zaqueo", "Bartimeo", "Lázaro", "Simón"],
+                        correct: 0,
+                        citation: "Lucas 19, 1-10",
+                        explanation: "Zaqueo subió a un sicómoro para ver pasar a Jesús y tras su visita cambió radicalmente su vida."
+                    },
+                    {
+                        question: "¿Qué profeta fue llevado al cielo visiblemente en un carro de fuego?",
+                        options: ["Eliseo", "Elías", "Samuel", "Isaías"],
+                        correct: 1,
+                        citation: "2 Reyes 2, 11",
+                        explanation: "El profeta Elías fue arrebatado al cielo en un torbellino impulsado por un carro de fuego."
+                    },
+                    {
+                        question: "¿Quién era el hermano de Marta y María a quien Jesús resucitó tras cuatro días sepultado?",
+                        options: ["Lázaro", "Esteban", "Santiago", "Cleofás"],
+                        correct: 0,
+                        citation: "Juan 11, 1-44",
+                        explanation: "Jesús exclamó: '¡Lázaro, sal fuera!', mostrando su poder victorioso sobre la muerte."
+                    }
+                ],
+                "Sacramentos y Doctrina": [
+                    {
+                        question: "¿Qué Sacramento es considerado por la Iglesia la 'fuente y culmen de toda la vida cristiana'?",
+                        options: ["El Bautismo", "La Eucaristía", "La Confirmación", "El Matrimonio"],
+                        correct: 1,
+                        citation: "CIC 1324",
+                        explanation: "La Sagrada Eucaristía contiene a Cristo mismo, nuestra Pascua y Pan de Vida eterna."
+                    },
+                    {
+                        question: "¿Qué término teológico define la transformación del pan y vino en el Cuerpo y Sangre de Cristo?",
+                        options: ["Consagración", "Transustanciación", "Resurrección", "Asunción"],
+                        correct: 1,
+                        citation: "CIC 1376",
+                        explanation: "La transustanciación expresa el cambio sustancial del pan y vino en la presencia real de Cristo."
+                    },
+                    {
+                        question: "¿Qué dogma enseña que María fue concebida libre de toda mancha del pecado original?",
+                        options: ["La Asunción", "La Inmaculada Concepción", "Maternidad Divina", "Perpetua Virginidad"],
+                        correct: 1,
+                        citation: "Dogma proclamado en 1854",
+                        explanation: "La Inmaculada Concepción enseña la preservación singular de María del pecado original desde el primer instante."
+                    },
+                    {
+                        question: "¿Cuáles son las dos partes principales en que se divide la Santa Misa?",
+                        options: ["Ofertorio y Comunión", "Liturgia de la Palabra y Liturgia Eucarística", "Lecturas y Homilía", "Ritos Iniciales y Bendición"],
+                        correct: 1,
+                        citation: "CIC 1346",
+                        explanation: "Ambas liturgias forman un solo acto sagrado de culto divino."
+                    }
+                ]
+            },
+            experto: {
+                "Antiguo Testamento": [
+                    {
+                        question: "¿En qué libro bíblico se encuentra el pasaje del 'Siervo Sufriente' que profetiza la Pasión de Cristo?",
+                        options: ["Jeremías", "Isaías", "Ezequiel", "Daniel"],
+                        correct: 1,
+                        citation: "Isaías 53",
+                        explanation: "Isaías 53 describe minuciosamente los sufrimientos redentores del Mesías con siglos de anticipación."
+                    },
+                    {
+                        question: "¿Cómo se llamaba el sacerdote y juez de Israel que crió al profeta Samuel en el Santuario de Siló?",
+                        options: ["Aarón", "Elí", "Melquisedec", "Sadoc"],
+                        correct: 1,
+                        citation: "1 Samuel 1-3",
+                        explanation: "El anciano sacerdote Elí cuidó al joven Samuel cuando este escuchó la llamada nocturna de Dios."
+                    },
+                    {
+                        question: "¿Quién fue el rey místico de Salén y sacerdote del Dios Altísimo que ofreció pan y vino a Abraham?",
+                        options: ["Melquisedec", "Balaam", "Jetró", "Abimelec"],
+                        correct: 0,
+                        citation: "Génesis 14, 18 / Hebreos 7",
+                        explanation: "Melquisedec es una figura profética del sacerdocio eterno e institución eucarística de Jesucristo."
+                    },
+                    {
+                        question: "¿Qué profeta del Antiguo Testamento se casó con Gomer por mandato divino como símbolo de la infidelidad del pueblo?",
+                        options: ["Oseas", "Amós", "Miqueas", "Sofonías"],
+                        correct: 0,
+                        citation: "Oseas 1, 2-3",
+                        explanation: "Dios le pidió al profeta Oseas tomar por esposa a Gomer para ilustrar el amor misericordioso de Dios hacia un pueblo infiel."
+                    }
+                ],
+                "Nuevo Testamento": [
+                    {
+                        question: "¿En qué ciudad San Pablo pronunció su famoso discurso del 'Dios Desconocido' en el Areópago?",
+                        options: ["Roma", "Corinto", "Atenas", "Éfeso"],
+                        correct: 2,
+                        citation: "Hechos 17, 22-31",
+                        explanation: "En Atenas, Pablo anunció el Evangelio tomando como punto de partida el altar dedicado 'Al Dios Desconocido'."
+                    },
+                    {
+                        question: "¿Quiénes eran los dos discípulos que caminaban tristes hacia una aldea a 11 km de Jerusalén cuando se les apareció el Resucitado?",
+                        options: ["Pedro y Juan", "Cleofás y otro discípulo", "Santiago y Felipe", "Pablo y Bernabé"],
+                        correct: 1,
+                        citation: "Lucas 24, 13-35",
+                        explanation: "Los discípulos de Emaús reconocieron al Señor Jesús al momento de la fracción del pan."
+                    },
+                    {
+                        question: "¿Qué diácono convirtió al etíope eunuco leyéndole el libro del profeta Isaías en su carroza?",
+                        options: ["Esteban", "Felipe el Diácono", "Prócoro", "Nicanor"],
+                        correct: 1,
+                        citation: "Hechos 8, 26-40",
+                        explanation: "San Felipe explicó las escrituras al eunuco etíope y posteriormente lo bautizó en el camino."
+                    },
+                    {
+                        question: "¿Qué isla sirvió de desierto y lugar de exilio a San Juan Evangelista donde escribió el Apocalipsis?",
+                        options: ["Creta", "Chipre", "Patmos", "Malta"],
+                        correct: 2,
+                        citation: "Apocalipsis 1, 9",
+                        explanation: "San Juan recibió las visiones celestiales del Apocalipsis durante su destierro en la isla de Patmos."
+                    }
+                ],
+                "Personajes Bíblicos": [
+                    {
+                        question: "¿Quién fue el primer mártir (protomártir) de la Iglesia, cuya lapidación presenció el joven Saulo?",
+                        options: ["San Pedro", "San Esteban", "San Lorenzo", "San Ignacio"],
+                        correct: 1,
+                        citation: "Hechos 7, 54-60",
+                        explanation: "San Esteban murió perdonando a sus verdugos mientras contemplaba los cielos abiertos."
+                    },
+                    {
+                        question: "¿Qué miembro del Sanedrín y discípulo en secreto consiguió el permiso de Pilato para sepultar a Jesús?",
+                        options: ["Nicodemo", "José de Arimatea", "Gamaliel", "Simón de Cirene"],
+                        correct: 1,
+                        citation: "Marcos 15, 43",
+                        explanation: "José de Arimatea cedió su propio sepulcro nuevo excavado en la roca para envolver el Santo Cuerpo de Jesús."
+                    },
+                    {
+                        question: "¿Cómo se llamaba el rabino y doctor de la Ley que fue maestro e instructor de San Pablo en Jerusalén?",
+                        options: ["Anás", "Caifás", "Gamaliel", "Shammai"],
+                        correct: 2,
+                        citation: "Hechos 22, 3",
+                        explanation: "San Pablo declaró haberse educado a los pies del sabio y respetado maestro Gamaliel."
+                    },
+                    {
+                        question: "¿Qué reina profetisa y jueza de Israel lideró la victoria junto a Barac contra el ejército de Sísara?",
+                        options: ["Débora", "Jael", "Noemí", "Séfora"],
+                        correct: 0,
+                        citation: "Jueces 4-5",
+                        explanation: "Débora fue la única mujer en gobernar e inspirar las victorias del pueblo en el período de los Jueces."
+                    }
+                ],
+                "Sacramentos y Doctrina": [
+                    {
+                        question: "¿Qué Concilio Ecuménico definió dogmáticamente el Canon oficial de 73 libros de la Biblia católica?",
+                        options: ["Concilio de Nicea", "Concilio de Trento", "Concilio Vaticano II", "Concilio de Calcedonia"],
+                        correct: 1,
+                        citation: "Sesión IV del Concilio de Trento (1546)",
+                        explanation: "El Concilio de Trento reconfirmó de forma solemne los 46 libros del Antiguo Testamento y 27 del Nuevo Testamento."
+                    },
+                    {
+                        question: "¿Cuáles son los tres sacramentos que imprimen un sello espiritual e imborrable llamado 'Carácter'?",
+                        options: ["Bautismo, Confirmación y Orden", "Eucaristía, Penitencia y Unción", "Bautismo, Matrimonio y Unción", "Confirmación, Eucaristía y Orden"],
+                        correct: 0,
+                        citation: "CIC 1121",
+                        explanation: "El Bautismo, la Confirmación y el Orden Sacerdotal modifican ontológicamente a la persona y solo se reciben una sola vez."
+                    },
+                    {
+                        question: "¿Cuál de las siguientes es una de las 3 virtudes teologales infundidas por Dios en el alma?",
+                        options: ["Prudencia", "Fortaleza", "Caridad", "Justicia"],
+                        correct: 2,
+                        citation: "1 Corintios 13, 13 / CIC 1812",
+                        explanation: "Las tres Virtudes Teologales son la Fe, la Esperanza y la Caridad (las otras opciones son virtudes cardinales)."
+                    },
+                    {
+                        question: "¿Qué nombre recibe el misterio de la Unión de la naturaleza Divina y Humana en la única Persona de Jesús?",
+                        options: ["Unión Hipostática", "Consustancialidad", "Kénosis", "Transustanciación"],
+                        correct: 0,
+                        citation: "Concilio de Calcedonia (451 d.C.)",
+                        explanation: "La Unión Hipostática establece que Cristo es perfecto Dios y perfecto hombre sin división ni confusión."
+                    }
+                ]
+            }
+        };
+
+        const categories = [
+            { name: "Antiguo Testamento", color: "#1E3A8A", text: "#FFFFFF" },
+            { name: "Nuevo Testamento", color: "#06B6D4", text: "#FFFFFF" },
+            { name: "Personajes Bíblicos", color: "#0A2540", text: "#FFFFFF" },
+            { name: "Sacramentos y Doctrina", color: "#22D3EE", text: "#0A2540" }
+        ];
+
+        let gameState = {
+            playerName: "Jugador",
+            difficulty: "basico",
+            score: 0,
+            currentQuestionIndex: 0,
+            maxQuestions: 10,
+            hits: 0,
+            streak: 0,
+            maxStreak: 0,
+            usedQuestions: {},
+            currentQuestion: null,
+            isSpinning: false
+        };
+
+        let currentRotationAngle = 0;
+
+        // Default local scores store
+        const defaultLeaderboard = {
+            basico: [
+                { name: "María G.", score: 1200, hits: 10 },
+                { name: "Hermano Juan", score: 1050, hits: 9 },
+                { name: "Lucía F.", score: 880, hits: 8 }
+            ],
+            medio: [
+                { name: "Padre Mateo", score: 1650, hits: 10 },
+                { name: "Santiago P.", score: 1400, hits: 9 },
+                { name: "Ana M.", score: 1100, hits: 8 }
+            ],
+            experto: [
+                { name: "Catequista Tomás", score: 2400, hits: 10 },
+                { name: "Gabriel S.", score: 1900, hits: 9 },
+                { name: "Isabel R.", score: 1500, hits: 8 }
+            ]
+        };
+
+        function getLeaderboards() {
+            try {
+                const stored = localStorage.getItem('trivia_biblica_rankings');
+                return stored ? JSON.parse(stored) : defaultLeaderboard;
+            } catch (e) {
+                return defaultLeaderboard;
+            }
+        }
+
+        function saveScoreToLeaderboard(level, name, score, hits) {
+            const rankings = getLeaderboards();
+            if (!rankings[level]) rankings[level] = [];
+            
+            rankings[level].push({ name: name, score: score, hits: hits });
+            rankings[level].sort((a, b) => b.score - a.score);
+            rankings[level] = rankings[level].slice(0, 5); // Keep top 5
+
+            try {
+                localStorage.setItem('trivia_biblica_rankings', JSON.stringify(rankings));
+            } catch (e) {
+                console.log("Could not save score locally.");
+            }
+        }
+
+        function renderLeaderboard(level = 'basico') {
+            const container = document.getElementById('leaderboard-container');
+            const rankings = getLeaderboards();
+            const levelData = rankings[level] || [];
+
+            ['basico', 'medio', 'experto'].forEach(lvl => {
+                const tab = document.getElementById(`tab-rank-${lvl}`);
+                if (lvl === level) {
+                    tab.className = "px-2.5 py-1 rounded-lg font-bold bg-brand-turquoise text-white";
+                } else {
+                    tab.className = "px-2.5 py-1 rounded-lg font-bold bg-gray-100 text-gray-600 hover:bg-gray-200";
+                }
+            });
+
+            if (levelData.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 italic text-center py-6">Sin puntuaciones registradas en este nivel.</p>`;
+                return;
+            }
+
+            const medals = ['text-amber-500 fa-trophy', 'text-slate-400 fa-medal', 'text-amber-700 fa-award'];
+
+            container.innerHTML = levelData.map((item, idx) => `
+                <div class="flex items-center justify-between p-2 rounded-xl ${idx === 0 ? 'bg-amber-50/80 border border-amber-200' : 'bg-gray-50'}">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 text-center font-bold text-brand-navy">
+                            ${idx < 3 ? `<i class="fas ${medals[idx]}"></i>` : `#${idx + 1}`}
+                        </span>
+                        <span class="font-bold text-brand-navy truncate max-w-[120px] sm:max-w-[180px]">${item.name}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] text-gray-500 font-semibold">${item.hits}/10 aciertos</span>
+                        <span class="font-extrabold text-brand-blue">${item.score} pts</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function initQuestionPool() {
+            gameState.usedQuestions = {};
+            const currentLevelData = questionDatabase[gameState.difficulty];
+            for (let cat in currentLevelData) {
+                gameState.usedQuestions[cat] = [];
+            }
+        }
+
+        function showScreen(screenId) {
+            const screens = ['screen-start', 'screen-roulette', 'screen-question', 'screen-results'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            const headerStats = document.getElementById('header-stats');
+            if (screenId === 'screen-start') {
+                headerStats.classList.add('hidden');
+            } else {
+                headerStats.classList.remove('hidden');
+            }
+        }
+
+        function updateHeaderStats() {
+            document.getElementById('stat-player').innerText = gameState.playerName;
+            document.getElementById('stat-level').innerText = gameState.difficulty;
+            document.getElementById('stat-score').innerText = gameState.score;
+            document.getElementById('stat-progress').innerText = `${gameState.currentQuestionIndex}/${gameState.maxQuestions}`;
+        }
+
+        function startGame(e) {
+            if (e) e.preventDefault();
+            const nameInput = document.getElementById('player-name').value.trim();
+            const levelSelected = document.querySelector('input[name="difficulty"]:checked').value;
+
+            gameState.playerName = nameInput || "Hermano en la Fe";
+            gameState.difficulty = levelSelected;
+            gameState.score = 0;
+            gameState.currentQuestionIndex = 0;
+            gameState.hits = 0;
+            gameState.streak = 0;
+            gameState.maxStreak = 0;
+
+            initQuestionPool();
+            updateHeaderStats();
+            showScreen('screen-roulette');
+            drawRouletteWheel(0);
+        }
+
+        function resetGame() {
+            renderLeaderboard(gameState.difficulty);
+            showScreen('screen-start');
+        }
+
+        const exitPhrases = [
+            '"La Palabra del Señor permanece para siempre." — ¡Sigue alimentando tu fe y regresa cuando desees probar otro nivel!',
+            '"Lámpara es tu palabra para mis pasos, luz en mi sendero." — ¡Ánimo en tu estudio de las Escrituras!',
+            '"Todo lo puedo en Cristo que me fortalece." — ¡Excelente esfuerzo! Sigue creciendo en sabiduría y gracia.',
+            '"Buscad y encontraréis." — ¡Que Dios bendiga tu camino y te inspire a seguir aprendiendo!'
+        ];
+
+        function confirmExitGame() {
+            const randomPhrase = exitPhrases[Math.floor(Math.random() * exitPhrases.length)];
+            document.getElementById('exit-message').innerText = randomPhrase;
+            document.getElementById('modal-exit').classList.remove('hidden');
+        }
+
+        function closeExitModal() {
+            document.getElementById('modal-exit').classList.add('hidden');
+        }
+
+        function executeExit() {
+            closeExitModal();
+            resetGame();
+        }
+
+        function drawRouletteWheel(angleOffset) {
+            const canvas = document.getElementById('roulette-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const numSlices = categories.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+
+            categories.forEach((cat, idx) => {
+                const startAngle = angleOffset + (idx * sliceAngle);
+                const endAngle = startAngle + sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = cat.color;
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#FFFFFF";
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = cat.text;
+                ctx.font = "bold 13px Poppins, sans-serif";
+                
+                const words = cat.name.split(" ");
+                if (words.length > 2) {
+                    ctx.fillText(words.slice(0, 2).join(" "), radius - 20, -6);
+                    ctx.fillText(words.slice(2).join(" "), radius - 20, 10);
+                } else {
+                    ctx.fillText(cat.name, radius - 20, 5);
+                }
+                
+                ctx.restore();
+            });
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = "#06B6D4";
+            ctx.stroke();
+        }
+
+        function spinWheel() {
+            if (gameState.isSpinning) return;
+            gameState.isSpinning = true;
+
+            const btnSpin = document.getElementById('btn-spin');
+            const categoryBanner = document.getElementById('category-result');
+            btnSpin.disabled = true;
+            btnSpin.classList.add('opacity-50', 'cursor-not-allowed');
+            categoryBanner.classList.add('hidden');
+
+            const extraRounds = 4 + Math.floor(Math.random() * 3);
+            const randomCategoryIndex = Math.floor(Math.random() * categories.length);
+            
+            const numSlices = categories.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+            
+            const targetSliceCenter = (randomCategoryIndex * sliceAngle) + (sliceAngle / 2);
+            const targetAngle = (3 * Math.PI / 2) - targetSliceCenter + (extraRounds * 2 * Math.PI);
+
+            const duration = 3200;
+            const startTime = performance.now();
+            const initialAngle = currentRotationAngle % (2 * Math.PI);
+
+            function animateSpin(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                currentRotationAngle = initialAngle + (targetAngle - initialAngle) * easeOut;
+
+                drawRouletteWheel(currentRotationAngle);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    gameState.isSpinning = false;
+                    btnSpin.disabled = false;
+                    btnSpin.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                    const selectedCategory = categories[randomCategoryIndex].name;
+                    
+                    categoryBanner.innerText = `¡${selectedCategory.toUpperCase()}!`;
+                    categoryBanner.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        prepareQuestionForCategory(selectedCategory);
+                    }, 1200);
+                }
+            }
+
+            requestAnimationFrame(animateSpin);
+        }
+
+        function prepareQuestionForCategory(categoryName) {
+            const levelQuestions = questionDatabase[gameState.difficulty][categoryName];
+            const availableQuestions = levelQuestions.filter(
+                (q, idx) => !gameState.usedQuestions[categoryName].includes(idx)
+            );
+
+            let questionObj;
+            let questionIdx;
+
+            if (availableQuestions.length === 0) {
+                questionIdx = Math.floor(Math.random() * levelQuestions.length);
+                questionObj = levelQuestions[questionIdx];
+            } else {
+                const randomPick = Math.floor(Math.random() * availableQuestions.length);
+                questionObj = availableQuestions[randomPick];
+                questionIdx = levelQuestions.indexOf(questionObj);
+                gameState.usedQuestions[categoryName].push(questionIdx);
+            }
+
+            gameState.currentQuestion = questionObj;
+            gameState.currentQuestionCategory = categoryName;
+            gameState.currentQuestionIndex++;
+
+            renderQuestion(questionObj, categoryName);
+            showScreen('screen-question');
+            updateHeaderStats();
+        }
+
+        function renderQuestion(qObj, categoryName) {
+            const badge = document.getElementById('question-category-badge');
+            badge.innerText = categoryName;
+
+            const levelBadge = document.getElementById('question-level-badge');
+            levelBadge.innerText = gameState.difficulty;
+
+            const streakBadge = document.getElementById('streak-badge');
+            if (gameState.streak > 1) {
+                document.getElementById('streak-count').innerText = gameState.streak;
+                streakBadge.classList.remove('hidden');
+                streakBadge.classList.add('flex');
+            } else {
+                streakBadge.classList.add('hidden');
+                streakBadge.classList.remove('flex');
+            }
+
+            document.getElementById('question-text').innerText = qObj.question;
+
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const optionLetters = ['A', 'B', 'C', 'D'];
+
+            // Map options and shuffle them so correct answer location changes dynamically
+            const mappedOptions = qObj.options.map((optText, originalIndex) => ({
+                text: optText,
+                isCorrect: originalIndex === qObj.correct
+            }));
+
+            const shuffledOptions = shuffleArray(mappedOptions);
+
+            shuffledOptions.forEach((optObj, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-card w-full p-4 rounded-xl text-left bg-white font-medium text-brand-navy shadow-sm flex items-center space-x-3 cursor-pointer';
+                btn.onclick = () => selectOption(optObj.isCorrect, btn, shuffledOptions);
+
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-lg bg-brand-lightTurquoise text-brand-blue font-bold flex items-center justify-center shrink-0">
+                        ${optionLetters[idx]}
+                    </span>
+                    <span class="text-sm sm:text-base leading-snug">${optObj.text}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(isCorrect, selectedBtn, currentShuffledOptions) {
+            const qObj = gameState.currentQuestion;
+            const optionsContainer = document.getElementById('options-container');
+            const allOptions = optionsContainer.children;
+
+            for (let i = 0; i < allOptions.length; i++) {
+                const btn = allOptions[i];
+                btn.onclick = null;
+                btn.classList.add('disabled', 'cursor-default');
+
+                if (!isCorrect && currentShuffledOptions[i].isCorrect) {
+                    btn.classList.add('selected-correct');
+                }
+            }
+
+            let levelMultiplier = 1;
+            if (gameState.difficulty === 'medio') levelMultiplier = 1.5;
+            if (gameState.difficulty === 'experto') levelMultiplier = 2;
+
+            if (isCorrect) {
+                selectedBtn.classList.add('selected-correct');
+                const gainedPoints = Math.round((100 + (gameState.streak * 20)) * levelMultiplier);
+                gameState.score += gainedPoints;
+                gameState.hits++;
+                gameState.streak++;
+                if (gameState.streak > gameState.maxStreak) {
+                    gameState.maxStreak = gameState.streak;
+                }
+                showFeedback(true, qObj, gainedPoints);
+            } else {
+                selectedBtn.classList.add('selected-wrong');
+                gameState.streak = 0;
+                showFeedback(false, qObj, 0);
+            }
+
+            updateHeaderStats();
+        }
+
+        function showFeedback(isCorrect, qObj, points) {
+            const feedbackBox = document.getElementById('feedback-box');
+            const titleEl = document.getElementById('feedback-title');
+            const quoteEl = document.getElementById('feedback-quote');
+            const explanationEl = document.getElementById('feedback-explanation');
+
+            if (isCorrect) {
+                feedbackBox.className = 'rounded-2xl p-5 text-sm space-y-2 bg-green-50 border-2 border-green-300 text-green-900';
+                titleEl.innerHTML = `<i class="fas fa-check-circle text-green-600 text-xl"></i> <span>¡Respuesta Correcta! (+${points} pts)</span>`;
+            } else {
+                feedbackBox.className = 'rounded-2xl p-5 text-sm space-y-2 bg-red-50 border-2 border-red-300 text-red-900';
+                titleEl.innerHTML = '<i class="fas fa-times-circle text-red-600 text-xl"></i> <span>Respuesta Incorrecta</span>';
+            }
+
+            quoteEl.innerText = `Cita: ${qObj.citation}`;
+            explanationEl.innerText = qObj.explanation;
+
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function nextStepAfterQuestion() {
+            if (gameState.currentQuestionIndex >= gameState.maxQuestions) {
+                showFinalResults();
+            } else {
+                showScreen('screen-roulette');
+                drawRouletteWheel(currentRotationAngle);
+            }
+        }
+
+        function showFinalResults() {
+            saveScoreToLeaderboard(gameState.difficulty, gameState.playerName, gameState.score, gameState.hits);
+            showScreen('screen-results');
+
+            const scoreEl = document.getElementById('final-score');
+            const hitsEl = document.getElementById('final-hits');
+            const percentageEl = document.getElementById('final-percentage');
+            const streakEl = document.getElementById('final-streak');
+            const levelText = document.getElementById('final-level-text');
+            const rankTitle = document.getElementById('final-rank-title');
+            const rankDesc = document.getElementById('final-rank-desc');
+            const rankIcon = document.getElementById('rank-icon');
+
+            const percentage = Math.round((gameState.hits / gameState.maxQuestions) * 100);
+
+            scoreEl.innerText = gameState.score;
+            hitsEl.innerText = `${gameState.hits} / ${gameState.maxQuestions}`;
+            percentageEl.innerText = `(${percentage}% aciertos)`;
+            streakEl.innerText = gameState.maxStreak;
+            levelText.innerText = gameState.difficulty;
+
+            let rank = "";
+            let desc = "";
+            let iconClass = "fa-award";
+
+            if (percentage >= 90) {
+                rank = gameState.difficulty === 'experto' ? "Teólogo y Maestro de la Fe" : "Maestro de las Escrituras";
+                desc = "¡Extraordinario! Demostraste un dominio admirable de la Biblia y la Doctrina Católica. ¡Sigue dando testimonio y luz a los demás!";
+                iconClass = "fa-crown";
+                triggerConfetti();
+            } else if (percentage >= 70) {
+                rank = "Discípulo Evangelizador";
+                desc = "¡Muy bien! Tienes bases sólidas en tu fe y conoces bien las Sagradas Escrituras. Te animamos a dar el siguiente paso.";
+                iconClass = "fa-scroll";
+            } else if (percentage >= 50) {
+                rank = "Buscador de la Verdad";
+                desc = "¡Buen trabajo! Vas por un excelente camino en tu caminar espiritual. La Palabra de Dios es fuente inagotable de sabiduría.";
+                iconClass = "fa-book-open";
+            } else {
+                rank = "Aprendiz del Evangelio";
+                desc = "Cada paso en la fe es valioso. Te invitamos a leer la Biblia diariamente y seguir descubriendo la riqueza de la doctrina católica.";
+                iconClass = "fa-seedling";
+            }
+
+            rankTitle.innerText = rank;
+            rankDesc.innerText = desc;
+            rankIcon.className = `fas ${iconClass} text-5xl text-brand-turquoise`;
+        }
+
+        function triggerConfetti() {
+            const confettiCanvas = document.getElementById('confetti-canvas');
+            const cCtx = confettiCanvas.getContext('2d');
+
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#06B6D4', '#22D3EE', '#1E3A8A', '#FACC15', '#FFFFFF'];
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 3 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    rotation: Math.random() * 360
+                });
+            }
+
+            const startTime = Date.now();
+
+            function renderConfetti() {
+                cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.rotation += 2;
+
+                    cCtx.save();
+                    cCtx.translate(p.x, p.y);
+                    cCtx.rotate((p.rotation * Math.PI) / 180);
+                    cCtx.fillStyle = p.color;
+                    cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    cCtx.restore();
+                });
+
+                if (Date.now() - startTime < 4000) {
+                    requestAnimationFrame(renderConfetti);
+                } else {
+                    cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                }
+            }
+
+            renderConfetti();
+        }
+
+        window.addEventListener('resize', () => {
+            const confettiCanvas = document.getElementById('confetti-canvas');
+            if (confettiCanvas) {
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+            }
+            drawRouletteWheel(currentRotationAngle);
+        });
+
+        window.onload = function() {
+            drawRouletteWheel(0);
+            renderLeaderboard('basico');
+        };
+    </script>
+</body>
+</html>
